@@ -1,0 +1,316 @@
+basePath: /v1
+definitions:
+  internal_handler.BatchCreateRequest:
+    properties:
+      notifications:
+        items:
+          $ref: '#/definitions/internal_handler.CreateNotificationRequest'
+        type: array
+    type: object
+  internal_handler.BatchCreateResponse:
+    properties:
+      batch_id:
+        type: string
+      count:
+        type: integer
+      notifications:
+        items:
+          $ref: '#/definitions/internal_handler.NotificationResponse'
+        type: array
+    type: object
+  internal_handler.CreateNotificationRequest:
+    properties:
+      channel:
+        description: Channel is the delivery channel.
+        enum:
+        - sms
+        - email
+        - push
+        example: sms
+        type: string
+      content:
+        description: Content is the raw message body. Use this or template + template_vars.
+        example: Your code is 123456
+        type: string
+      idempotency_key:
+        description: IdempotencyKey is an optional client-generated key to prevent
+          duplicate sends (e.g. UUID or unique business id). If you retry with the
+          same key, the same notification is returned.
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      priority:
+        description: 'Priority controls queue ordering: high, normal, or low. Defaults
+          to normal if omitted.'
+        enum:
+        - high
+        - normal
+        - low
+        example: normal
+        type: string
+      recipient:
+        description: 'Recipient is the destination: phone number (SMS), email address,
+          or device token (push).'
+        example: "+15551234567"
+        type: string
+      scheduled_at:
+        description: ScheduledAt is the optional send time in RFC3339 format (e.g.
+          2025-12-31T09:00:00Z). Omit for immediate send.
+        example: "2025-12-31T09:00:00Z"
+        type: string
+      template:
+        description: Template is an optional body with Go template placeholders (e.g.
+          "Hello {{.name}}, your code is {{.code}}"). Use with template_vars; rendered
+          result becomes content.
+        example: Hello {{.name}}, your code is {{.code}}
+        type: string
+      template_vars:
+        additionalProperties:
+          type: string
+        description: TemplateVars are key-value pairs for template substitution (e.g.
+          {"name":"Alice","code":"123"}).
+        type: object
+    type: object
+  internal_handler.ErrorResponse:
+    properties:
+      error:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/internal_handler.FieldError'
+        type: array
+    type: object
+  internal_handler.FieldError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+    type: object
+  internal_handler.ListResponse:
+    properties:
+      next_cursor:
+        type: string
+      notifications:
+        items:
+          $ref: '#/definitions/internal_handler.NotificationResponse'
+        type: array
+    type: object
+  internal_handler.NotificationResponse:
+    properties:
+      attempt_count:
+        type: integer
+      batch_id:
+        $ref: '#/definitions/null.String'
+      channel:
+        enum:
+        - sms
+        - email
+        - push
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      idempotency_key:
+        $ref: '#/definitions/null.String'
+      priority:
+        enum:
+        - high
+        - normal
+        - low
+        type: string
+      provider_msg_id:
+        $ref: '#/definitions/null.String'
+      recipient:
+        type: string
+      scheduled_at:
+        type: string
+      status:
+        enum:
+        - pending
+        - processing
+        - delivered
+        - failed
+        - cancelled
+        - scheduled
+        type: string
+      updated_at:
+        type: string
+    type: object
+  null.String:
+    properties:
+      string:
+        type: string
+      valid:
+        description: Valid is true if String is not NULL
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: 'Event-driven notification system: create, list, cancel notifications;
+    batch create; WebSocket status stream.'
+  title: Notification Service API
+  version: "1.0"
+paths:
+  /notifications:
+    get:
+      description: Query notifications with status, channel, and optional date range.
+        Use cursor from response for next page.
+      parameters:
+      - description: Filter by status
+        enum:
+        - pending
+        - processing
+        - delivered
+        - failed
+        - cancelled
+        - scheduled
+        in: query
+        name: status
+        type: string
+      - description: Filter by channel
+        enum:
+        - sms
+        - email
+        - push
+        in: query
+        name: channel
+        type: string
+      - description: Filter by batch ID (UUID)
+        in: query
+        name: batch_id
+        type: string
+      - description: Only notifications created after this time (RFC3339)
+        in: query
+        name: created_after
+        type: string
+      - description: Only notifications created before this time (RFC3339)
+        in: query
+        name: created_before
+        type: string
+      - description: Results per page (default 20, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Pagination cursor from previous response (opaque)
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.ListResponse'
+      summary: List notifications
+      tags:
+      - Notifications
+    post:
+      consumes:
+      - application/json
+      description: Create a single notification. Provide content directly or use template
+        + template_vars for inline rendering. Use idempotency_key to avoid duplicates
+        on retries. scheduled_at must be RFC3339 (e.g. 2025-12-31T09:00:00Z); omit
+        for immediate send.
+      parameters:
+      - description: Notification details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.CreateNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_handler.NotificationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: Create notification
+      tags:
+      - Notifications
+  /notifications/{id}:
+    delete:
+      description: Stop a notification that hasn't been processed yet
+      parameters:
+      - description: Notification ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: Cancel notification
+      tags:
+      - Notifications
+    get:
+      description: Fetch details of a specific notification
+      parameters:
+      - description: Notification ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_handler.NotificationResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: Get notification
+      tags:
+      - Notifications
+  /notifications/batch:
+    post:
+      consumes:
+      - application/json
+      description: Send up to 1000 notifications in one request
+      parameters:
+      - description: List of notifications
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.BatchCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_handler.BatchCreateResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/internal_handler.ErrorResponse'
+      summary: Create batch notifications
+      tags:
+      - Notifications
+swagger: "2.0"

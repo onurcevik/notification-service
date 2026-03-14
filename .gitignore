@@ -1,0 +1,11 @@
+# Local env (use .env.example as template)
+.env
+
+# Binary
+/server
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
