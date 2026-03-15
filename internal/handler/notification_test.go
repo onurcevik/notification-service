@@ -94,11 +94,11 @@ func TestNotificationHandler_Create(t *testing.T) {
 		{
 			name: "valid request with template",
 			req: CreateNotificationRequest{
-				Recipient:   "+905551234567",
-				Channel:     "sms",
-				Template:    "Hello {{.name}}, code: {{.code}}",
+				Recipient:    "+905551234567",
+				Channel:      "sms",
+				Template:     "Hello {{.name}}, code: {{.code}}",
 				TemplateVars: map[string]string{"name": "Alice", "code": "123"},
-				Priority:    "normal",
+				Priority:     "normal",
 			},
 			setup: func(mNotif *mocks.NotificationRepository, mEvent *mocks.EventRepository, mTx *mocks.Transactor) {
 				mTx.On("WithTransaction", mock.Anything, mock.Anything).Return(nil).Run(func(args mock.Arguments) {

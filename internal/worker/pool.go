@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	DefaultConsecutiveFailures    = 5
+	DefaultConsecutiveFailures   = 5
 	DefaultTimeoutSec            = 30
 	DefaultHalfOpenMaxRequests   = 1
 	DefaultWorkerCountPerChannel = 10

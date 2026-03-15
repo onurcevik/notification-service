@@ -21,7 +21,7 @@ func TestRedisQueue_Priority(t *testing.T) {
 
 	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})
-	t.Cleanup(func() { rdb.Close() })
+	t.Cleanup(func() { _ = rdb.Close() })
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		t.Skip("redis not available")
 	}
@@ -87,7 +87,7 @@ func TestRedisQueue_Ack(t *testing.T) {
 
 	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})
-	t.Cleanup(func() { rdb.Close() })
+	t.Cleanup(func() { _ = rdb.Close() })
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		t.Skip("redis not available")
 	}
@@ -128,7 +128,7 @@ func TestRedisQueue_ConsumeBlockStarvation(t *testing.T) {
 
 	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})
-	t.Cleanup(func() { rdb.Close() })
+	t.Cleanup(func() { _ = rdb.Close() })
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		t.Skip("redis not available")
 	}
@@ -179,7 +179,7 @@ func TestRedisQueue_DeadLetter(t *testing.T) {
 
 	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})
-	t.Cleanup(func() { rdb.Close() })
+	t.Cleanup(func() { _ = rdb.Close() })
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		t.Skip("redis not available")
 	}
@@ -213,7 +213,7 @@ func TestRedisQueue_Init_ExistingGroup(t *testing.T) {
 
 	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})
-	t.Cleanup(func() { rdb.Close() })
+	t.Cleanup(func() { _ = rdb.Close() })
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		t.Skip("redis not available")
 	}
@@ -233,7 +233,7 @@ func TestRedisQueue_Consume_PoisonMessage(t *testing.T) {
 
 	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})
-	t.Cleanup(func() { rdb.Close() })
+	t.Cleanup(func() { _ = rdb.Close() })
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		t.Skip("redis not available")
 	}
@@ -265,7 +265,7 @@ func TestRedisQueue_ShortBlockNoStarvation(t *testing.T) {
 
 	ctx := context.Background()
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:6379"})
-	t.Cleanup(func() { rdb.Close() })
+	t.Cleanup(func() { _ = rdb.Close() })
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		t.Skip("redis not available")
 	}

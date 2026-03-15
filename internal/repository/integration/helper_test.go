@@ -17,7 +17,7 @@ import (
 
 func init() {
 	if os.Getenv("TESTCONTAINERS_RYUK_DISABLED") == "" {
-		os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
+		_ = os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
 	}
 }
 

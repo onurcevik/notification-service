@@ -116,9 +116,9 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	go relay.Run(ctx) // relay is responsible for enqueuing notifications into the queue
+	go relay.Run(ctx)      // relay is responsible for enqueuing notifications into the queue
 	go workerPool.Run(ctx) // worker pool is responsible for processing notifications from the queue
-	go scheduler.Run(ctx) // scheduler is responsible for scheduling notifications to be sent at a later time
+	go scheduler.Run(ctx)  // scheduler is responsible for scheduling notifications to be sent at a later time
 
 	go func() {
 		logger.Info().Str("port", cfg.Port).Msg("server starting")

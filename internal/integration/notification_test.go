@@ -37,7 +37,7 @@ func init() {
 	// in CI and on reviewer machines where the reaper often fails (e.g. Docker-in-Docker).
 	// Containers are still cleaned up via defer Terminate() in each test.
 	if os.Getenv("TESTCONTAINERS_RYUK_DISABLED") == "" {
-		os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
+		_ = os.Setenv("TESTCONTAINERS_RYUK_DISABLED", "true")
 	}
 }
 

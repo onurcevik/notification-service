@@ -66,7 +66,7 @@ type Filter struct {
 	// CreatedBefore returns only notifications created before this time (RFC3339).
 	CreatedBefore *time.Time
 	// CursorAfter and CursorLastID together form the pagination cursor (opaque; from next_cursor).
-	CursorAfter *time.Time
+	CursorAfter  *time.Time
 	CursorLastID *string
 	// Limit is the page size (default 20, max 100).
 	Limit int

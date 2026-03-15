@@ -1,0 +1,13 @@
+# Explicit config so local and CI (golangci-lint v2.4.0) behave the same
+# regardless of which binary version is installed locally.
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused

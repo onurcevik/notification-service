@@ -21,12 +21,12 @@ type Metrics struct {
 
 	// Latency tracking: total nanoseconds and count per channel.
 	// Average latency = TotalNs / Count.
-	LatencySMSNs   atomic.Int64
-	LatencySMSCnt  atomic.Int64
-	LatencyEmailNs atomic.Int64
+	LatencySMSNs    atomic.Int64
+	LatencySMSCnt   atomic.Int64
+	LatencyEmailNs  atomic.Int64
 	LatencyEmailCnt atomic.Int64
-	LatencyPushNs  atomic.Int64
-	LatencyPushCnt atomic.Int64
+	LatencyPushNs   atomic.Int64
+	LatencyPushCnt  atomic.Int64
 }
 
 // IncDelivered increments the delivery success counter for a specific channel.

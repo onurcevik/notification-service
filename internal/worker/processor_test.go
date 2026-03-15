@@ -39,7 +39,7 @@ type updateStatusCall struct {
 }
 
 type fakeRepo struct {
-	notifications    map[string]*domain.Notification
+	notifications     map[string]*domain.Notification
 	updateStatusCalls []updateStatusCall
 	incrementCalls    int
 	incrementErr      error
@@ -91,8 +91,8 @@ type fakeMetrics struct {
 	failed    int
 }
 
-func (m *fakeMetrics) IncDelivered(_ string) { m.delivered++ }
-func (m *fakeMetrics) IncFailed(_ string)    { m.failed++ }
+func (m *fakeMetrics) IncDelivered(_ string)                   { m.delivered++ }
+func (m *fakeMetrics) IncFailed(_ string)                      { m.failed++ }
 func (m *fakeMetrics) RecordLatency(_ string, _ time.Duration) {}
 
 type fakeBroadcast struct {

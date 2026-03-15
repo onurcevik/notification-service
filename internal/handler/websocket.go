@@ -36,7 +36,7 @@ func (h *WebSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Ctx(r.Context()).Error().Err(err).Msg("websocket upgrade failed")
 		return
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	ch, unsubscribe := h.hub.Subscribe()
 	defer unsubscribe()

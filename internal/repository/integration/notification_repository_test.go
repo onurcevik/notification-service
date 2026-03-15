@@ -83,11 +83,11 @@ func TestNotificationRepository_Integration(t *testing.T) {
 		key := "idem-dup"
 		n := &domain.Notification{
 			IdempotencyKey: null.StringFrom(key),
-			Channel:       domain.ChannelSMS,
-			Priority:      domain.PriorityNormal,
-			Status:        domain.StatusPending,
-			Recipient:     "+15550000000",
-			Content:       "Dup",
+			Channel:        domain.ChannelSMS,
+			Priority:       domain.PriorityNormal,
+			Status:         domain.StatusPending,
+			Recipient:      "+15550000000",
+			Content:        "Dup",
 		}
 		err := txr.WithTransaction(ctx, func(tx pgx.Tx) error {
 			return notifRepo.Create(ctx, tx, n)
@@ -100,7 +100,7 @@ func TestNotificationRepository_Integration(t *testing.T) {
 			Channel:        domain.ChannelSMS,
 			Priority:       domain.PriorityNormal,
 			Status:         domain.StatusPending,
-			Recipient:     "+15550000001",
+			Recipient:      "+15550000001",
 			Content:        "Dup2",
 		}
 		err = txr.WithTransaction(ctx, func(tx pgx.Tx) error {
