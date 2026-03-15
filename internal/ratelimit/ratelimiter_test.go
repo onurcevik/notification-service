@@ -14,7 +14,7 @@ import (
 func redisClient(t *testing.T) *redis.Client {
 	t.Helper()
 	rdb := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
-	t.Cleanup(func() { rdb.Close() })
+	t.Cleanup(func() { _ = rdb.Close() })
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		t.Skip("Redis not available:", err)
 	}
@@ -127,7 +127,7 @@ func TestRedisLimiter_ContextCancelled(t *testing.T) {
 // the limiter should return nil (fail open) so notifications are not dropped.
 func TestRedisLimiter_FailOpen(t *testing.T) {
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:19999"})
-	defer rdb.Close()
+	defer func() { _ = rdb.Close() }()
 	limiter := NewRedisLimiter(rdb, 10)
 	err := limiter.Wait(context.Background(), "test-channel")
 	assert.NoError(t, err)
@@ -138,7 +138,7 @@ func TestRedisLimiter_FailOpen(t *testing.T) {
 func TestRedisLimiter_NoLimit_ReturnsImmediately(t *testing.T) {
 	// Deliberately point at a dead Redis to confirm Redis is never contacted.
 	rdb := redis.NewClient(&redis.Options{Addr: "127.0.0.1:19999"})
-	defer rdb.Close()
+	defer func() { _ = rdb.Close() }()
 	for _, maxPerSec := range []int{0, -1} {
 		limiter := NewRedisLimiter(rdb, maxPerSec)
 		err := limiter.Wait(context.Background(), "no-limit")

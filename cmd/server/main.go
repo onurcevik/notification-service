@@ -66,7 +66,7 @@ func main() {
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		logger.Fatal().Err(err).Msg("redis ping failed")
 	}
-	defer rdb.Close()
+	defer func() { _ = rdb.Close() }()
 
 	notifRepo := repository.NewNotificationRepository(pool)
 	eventRepo := repository.NewEventRepository(pool)

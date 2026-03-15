@@ -59,11 +59,14 @@ migrate:
 migrate-down:
 	$(MIGRATE) down 1
 
+# Use same golangci-lint v2 as CI so .golangci.yml (version "2") works locally.
+GOLANGCI_LINT = go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.4.0
+
 lint:
-	golangci-lint run ./...
+	$(GOLANGCI_LINT) run ./... --timeout 5m
 
 lint-fix:
-	golangci-lint run --fix ./...
+	$(GOLANGCI_LINT) run ./... --fix --timeout 5m
 
 generate: mocks swagger
 

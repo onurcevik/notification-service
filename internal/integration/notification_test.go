@@ -98,7 +98,7 @@ func TestNotificationFlow(t *testing.T) {
 	defer pool.Close()
 
 	rdb := redis_v9.NewClient(&redis_v9.Options{Addr: redisAddr})
-	defer rdb.Close()
+	defer func() { _ = rdb.Close() }()
 
 	applyMigrations(t, pool)
 
@@ -255,7 +255,7 @@ func TestHealth_Integration(t *testing.T) {
 	}
 	redisAddr := fmt.Sprintf("%s:%s", redisHost, redisPort.Port())
 	rdb := redis_v9.NewClient(&redis_v9.Options{Addr: redisAddr})
-	defer rdb.Close()
+	defer func() { _ = rdb.Close() }()
 
 	healthHandler := handler.NewHealthHandler(pool, rdb, nil)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
