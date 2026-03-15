@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -10,11 +11,13 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
-	"gitlab.com/onurcevik/notification-service/internal/domain"
-	"gitlab.com/onurcevik/notification-service/internal/queue"
+	"github.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/queue"
 )
 
 var tracer = otel.Tracer("notification-service/worker")
+
+const incrementAttemptRetries = 3
 
 var retryDelays = []time.Duration{
 	0,
@@ -98,6 +101,20 @@ func newProcessor(
 	}
 }
 
+func (p *processor) incrementAttemptWithRetry(ctx context.Context, notificationID string) error {
+	var lastErr error
+	for i := 0; i < incrementAttemptRetries; i++ {
+		lastErr = p.repo.IncrementAttempt(ctx, notificationID)
+		if lastErr == nil {
+			return nil
+		}
+		if i < incrementAttemptRetries-1 { // back off
+			time.Sleep(time.Duration(50*(i+1)) * time.Millisecond) // 50ms, 100ms, 150ms
+		}
+	}
+	return lastErr // return the last error
+}
+
 func (p *processor) run(ctx context.Context, consumerID string) {
 	for {
 		select {
@@ -179,8 +196,8 @@ func (p *processor) process(ctx context.Context, msg *queue.Message) {
 			return p.provider.Send(ctx, n)
 		})
 
-		if err := p.repo.IncrementAttempt(ctx, n.ID); err != nil {
-			log.Ctx(ctx).Error().Err(err).Str("notification_id", n.ID).Msg("failed to increment attempt")
+		if incErr := p.incrementAttemptWithRetry(ctx, n.ID); incErr != nil {
+			log.Ctx(ctx).Error().Err(incErr).Str("notification_id", n.ID).Msg("failed to increment attempt after retries")
 		}
 
 		if err != nil {
@@ -194,8 +211,13 @@ func (p *processor) process(ctx context.Context, msg *queue.Message) {
 			continue
 		}
 
-		deliveryResult := result.(*domain.DeliveryResult)
-		if err := p.repo.UpdateStatus(ctx, n.ID, domain.StatusDelivered, deliveryResult.ProviderMessageID); err != nil {
+		dr, ok := result.(*domain.DeliveryResult)
+		if !ok || dr == nil {
+			lastErr = fmt.Errorf("unexpected provider result type")
+			log.Ctx(ctx).Warn().Str("notification_id", n.ID).Msg("provider returned unexpected result type")
+			continue
+		}
+		if err := p.repo.UpdateStatus(ctx, n.ID, domain.StatusDelivered, dr.ProviderMessageID); err != nil {
 			log.Ctx(ctx).Error().Err(err).Str("notification_id", n.ID).Msg("failed to set delivered status")
 		}
 		if p.broadcast != nil {
@@ -210,7 +232,7 @@ func (p *processor) process(ctx context.Context, msg *queue.Message) {
 		log.Ctx(ctx).Info().
 			Str("notification_id", n.ID).
 			Str("channel", string(n.Channel)).
-			Str("provider_msg_id", deliveryResult.ProviderMessageID).
+			Str("provider_msg_id", dr.ProviderMessageID).
 			Dur("latency", latency).
 			Msg("notification delivered")
 		return

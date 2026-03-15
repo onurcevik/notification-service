@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
-	"gitlab.com/onurcevik/notification-service/internal/domain"
-	"gitlab.com/onurcevik/notification-service/internal/mocks"
+	"github.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

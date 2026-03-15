@@ -9,9 +9,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"gopkg.in/guregu/null.v4"
 
-	"gitlab.com/onurcevik/notification-service/internal/domain"
-	"gitlab.com/onurcevik/notification-service/internal/mocks"
-	"gitlab.com/onurcevik/notification-service/internal/repository"
+	"github.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/mocks"
+	"github.com/onurcevik/notification-service/internal/repository"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

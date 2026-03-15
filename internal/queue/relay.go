@@ -6,21 +6,33 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"gitlab.com/onurcevik/notification-service/internal/service"
+	"github.com/onurcevik/notification-service/internal/domain"
 )
+
+// NotificationGetter is the minimal interface needed by the relay to fetch a notification by ID.
+type NotificationGetter interface {
+	GetByID(ctx context.Context, id string) (*domain.Notification, error)
+}
+
+// OutboxEventRepo is the minimal interface for the outbox event table used by the relay.
+type OutboxEventRepo interface {
+	FetchUnpublished(ctx context.Context) ([]string, error)
+	MarkPublished(ctx context.Context, ids []string) error
+	FetchStale(ctx context.Context) ([]string, error)
+}
 
 // OutboxRelay polls the database outbox and enqueues messages into Redis.
 type OutboxRelay struct {
-	notifRepo service.NotificationRepository
-	eventRepo service.EventRepository
+	notifRepo NotificationGetter
+	eventRepo OutboxEventRepo
 	queue     *RedisQueue
 	interval  time.Duration
 }
 
 // NewOutboxRelay creates a new OutboxRelay.
 func NewOutboxRelay(
-	notifRepo service.NotificationRepository,
-	eventRepo service.EventRepository,
+	notifRepo NotificationGetter,
+	eventRepo OutboxEventRepo,
 	queue *RedisQueue,
 	interval time.Duration,
 ) *OutboxRelay {

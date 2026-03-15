@@ -5,8 +5,8 @@ package mocks
 import (
 	context "context"
 
+	domain "github.com/onurcevik/notification-service/internal/domain"
 	mock "github.com/stretchr/testify/mock"
-	domain "gitlab.com/onurcevik/notification-service/internal/domain"
 
 	pgx "github.com/jackc/pgx/v5"
 )

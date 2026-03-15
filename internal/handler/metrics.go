@@ -7,7 +7,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"gitlab.com/onurcevik/notification-service/internal/queue"
+	"github.com/onurcevik/notification-service/internal/queue"
 )
 
 // Metrics stores various service-wide performance counters.

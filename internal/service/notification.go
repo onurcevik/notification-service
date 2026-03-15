@@ -10,8 +10,8 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"gopkg.in/guregu/null.v4"
 
-	"gitlab.com/onurcevik/notification-service/internal/domain"
-	"gitlab.com/onurcevik/notification-service/internal/repository"
+	"github.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/repository"
 )
 
 var tracer = otel.Tracer("notification-service/service")

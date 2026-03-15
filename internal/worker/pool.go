@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/sony/gobreaker"
 
-	"gitlab.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/domain"
 )
 
 const (

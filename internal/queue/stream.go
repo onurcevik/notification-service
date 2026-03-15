@@ -9,7 +9,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"gitlab.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/domain"
 )
 
 const (
@@ -82,7 +82,9 @@ func (q *RedisQueue) Enqueue(ctx context.Context, n *domain.Notification) error 
 
 // Consume reads the next available message from the streams in priority order.
 // Uses a short block per stream so normal/low are not starved when high is empty.
+// Returns any Redis error encountered so callers can back off or log (e.g. connection failures).
 func (q *RedisQueue) Consume(ctx context.Context) (*Message, error) {
+	var consumeErr error
 	for _, stream := range []string{StreamHigh, StreamNormal, StreamLow} {
 		msgs, err := q.rdb.XReadGroup(ctx, &redis.XReadGroupArgs{
 			Group:    GroupName,
@@ -91,7 +93,11 @@ func (q *RedisQueue) Consume(ctx context.Context) (*Message, error) {
 			Count:    1,
 			Block:    q.consumeBlock,
 		}).Result()
-		if err != nil || len(msgs) == 0 || len(msgs[0].Messages) == 0 {
+		if err != nil {
+			consumeErr = err
+			continue
+		}
+		if len(msgs) == 0 || len(msgs[0].Messages) == 0 {
 			continue
 		}
 
@@ -107,6 +113,9 @@ func (q *RedisQueue) Consume(ctx context.Context) (*Message, error) {
 		}
 
 		return &Message{ID: msg.ID, Stream: stream, Notification: &n}, nil
+	}
+	if consumeErr != nil {
+		return nil, consumeErr
 	}
 	return nil, nil
 }

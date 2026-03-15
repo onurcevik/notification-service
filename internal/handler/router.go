@@ -9,7 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	httpSwagger "github.com/swaggo/http-swagger"
 
-	_ "gitlab.com/onurcevik/notification-service/docs"
+	_ "github.com/onurcevik/notification-service/docs"
 )
 
 // NewRouter initializes the chi router with middlewares and all service routes.

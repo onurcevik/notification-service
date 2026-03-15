@@ -22,14 +22,14 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/redis"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	"gitlab.com/onurcevik/notification-service/internal/config"
-	"gitlab.com/onurcevik/notification-service/internal/domain"
-	"gitlab.com/onurcevik/notification-service/internal/handler"
-	"gitlab.com/onurcevik/notification-service/internal/queue"
-	"gitlab.com/onurcevik/notification-service/internal/ratelimit"
-	"gitlab.com/onurcevik/notification-service/internal/repository"
-	"gitlab.com/onurcevik/notification-service/internal/service"
-	"gitlab.com/onurcevik/notification-service/internal/worker"
+	"github.com/onurcevik/notification-service/internal/config"
+	"github.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/handler"
+	"github.com/onurcevik/notification-service/internal/queue"
+	"github.com/onurcevik/notification-service/internal/ratelimit"
+	"github.com/onurcevik/notification-service/internal/repository"
+	"github.com/onurcevik/notification-service/internal/service"
+	"github.com/onurcevik/notification-service/internal/worker"
 )
 
 func init() {

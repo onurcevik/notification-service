@@ -1,4 +1,4 @@
-module gitlab.com/onurcevik/notification-service
+module github.com/onurcevik/notification-service
 
 go 1.25.3
 

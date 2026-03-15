@@ -23,16 +23,16 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
-	"gitlab.com/onurcevik/notification-service/internal/config"
-	"gitlab.com/onurcevik/notification-service/internal/handler"
-	"gitlab.com/onurcevik/notification-service/internal/hub"
-	"gitlab.com/onurcevik/notification-service/internal/provider"
-	"gitlab.com/onurcevik/notification-service/internal/queue"
-	"gitlab.com/onurcevik/notification-service/internal/ratelimit"
-	"gitlab.com/onurcevik/notification-service/internal/repository"
-	"gitlab.com/onurcevik/notification-service/internal/service"
-	"gitlab.com/onurcevik/notification-service/internal/telemetry"
-	"gitlab.com/onurcevik/notification-service/internal/worker"
+	"github.com/onurcevik/notification-service/internal/config"
+	"github.com/onurcevik/notification-service/internal/handler"
+	"github.com/onurcevik/notification-service/internal/hub"
+	"github.com/onurcevik/notification-service/internal/provider"
+	"github.com/onurcevik/notification-service/internal/queue"
+	"github.com/onurcevik/notification-service/internal/ratelimit"
+	"github.com/onurcevik/notification-service/internal/repository"
+	"github.com/onurcevik/notification-service/internal/service"
+	"github.com/onurcevik/notification-service/internal/telemetry"
+	"github.com/onurcevik/notification-service/internal/worker"
 )
 
 func main() {

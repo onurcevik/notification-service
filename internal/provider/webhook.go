@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
-	"gitlab.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/domain"
 )
 
 var tracer = otel.Tracer("notification-service/provider")

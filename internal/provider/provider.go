@@ -3,7 +3,7 @@ package provider
 import (
 	"context"
 
-	"gitlab.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/domain"
 )
 
 // Provider defines the interface for delivering notifications to external channels.

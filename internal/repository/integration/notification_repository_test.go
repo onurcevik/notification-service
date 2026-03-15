@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/stretchr/testify/require"
 
-	"gitlab.com/onurcevik/notification-service/internal/domain"
-	"gitlab.com/onurcevik/notification-service/internal/repository"
+	"github.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/repository"
 	"gopkg.in/guregu/null.v4"
 )
 
@@ -165,6 +165,76 @@ func TestNotificationRepository_Integration(t *testing.T) {
 		_, err := notifRepo.GetByID(ctx, "00000000-0000-0000-0000-000000000000")
 		if err != repository.ErrNotFound {
 			t.Errorf("expected ErrNotFound, got %v", err)
+		}
+	})
+
+	t.Run("Cancel non-existent returns ErrNotFound", func(t *testing.T) {
+		err := notifRepo.Cancel(ctx, "00000000-0000-0000-0000-000000000000")
+		if err != repository.ErrNotFound {
+			t.Errorf("expected ErrNotFound for cancel of non-existent ID, got %v", err)
+		}
+	})
+
+	t.Run("Cancel delivered returns ErrCannotCancel", func(t *testing.T) {
+		n := &domain.Notification{
+			Channel:   domain.ChannelSMS,
+			Priority:  domain.PriorityNormal,
+			Status:    domain.StatusPending,
+			Recipient: "+15557777777",
+			Content:   "Will be delivered before cancel attempt",
+		}
+		err := txr.WithTransaction(ctx, func(tx pgx.Tx) error {
+			return notifRepo.Create(ctx, tx, n)
+		})
+		if err != nil {
+			t.Fatalf("Create: %v", err)
+		}
+		// Move notification to delivered state; Cancel should reject it.
+		if err := notifRepo.UpdateStatus(ctx, n.ID, domain.StatusDelivered, "ext-cancel-test"); err != nil {
+			t.Fatalf("UpdateStatus to delivered: %v", err)
+		}
+		err = notifRepo.Cancel(ctx, n.ID)
+		if err != repository.ErrCannotCancel {
+			t.Errorf("expected ErrCannotCancel for delivered notification, got %v", err)
+		}
+	})
+
+	t.Run("IncrementAttempt increments counter", func(t *testing.T) {
+		n := &domain.Notification{
+			Channel:   domain.ChannelEmail,
+			Priority:  domain.PriorityNormal,
+			Status:    domain.StatusPending,
+			Recipient: "inc@test.com",
+			Content:   "Increment test",
+		}
+		err := txr.WithTransaction(ctx, func(tx pgx.Tx) error {
+			return notifRepo.Create(ctx, tx, n)
+		})
+		if err != nil {
+			t.Fatalf("Create: %v", err)
+		}
+
+		// Initial attempt count should be 0.
+		got, err := notifRepo.GetByID(ctx, n.ID)
+		if err != nil {
+			t.Fatalf("GetByID: %v", err)
+		}
+		if got.AttemptCount != 0 {
+			t.Errorf("expected initial attempt_count=0, got %d", got.AttemptCount)
+		}
+
+		// Increment twice and verify each step.
+		for i := 1; i <= 2; i++ {
+			if err := notifRepo.IncrementAttempt(ctx, n.ID); err != nil {
+				t.Fatalf("IncrementAttempt (call %d): %v", i, err)
+			}
+			got, err = notifRepo.GetByID(ctx, n.ID)
+			if err != nil {
+				t.Fatalf("GetByID after increment %d: %v", i, err)
+			}
+			if got.AttemptCount != i {
+				t.Errorf("expected attempt_count=%d after %d increments, got %d", i, i, got.AttemptCount)
+			}
 		}
 	})
 

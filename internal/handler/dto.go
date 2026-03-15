@@ -5,7 +5,7 @@ import (
 
 	"gopkg.in/guregu/null.v4"
 
-	"gitlab.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/domain"
 )
 
 // CreateNotificationRequest defines the payload for creating a single notification.

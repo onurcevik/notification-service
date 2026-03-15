@@ -12,10 +12,10 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
-	"gitlab.com/onurcevik/notification-service/internal/domain"
-	"gitlab.com/onurcevik/notification-service/internal/mocks"
-	"gitlab.com/onurcevik/notification-service/internal/repository"
-	"gitlab.com/onurcevik/notification-service/internal/service"
+	"github.com/onurcevik/notification-service/internal/domain"
+	"github.com/onurcevik/notification-service/internal/mocks"
+	"github.com/onurcevik/notification-service/internal/repository"
+	"github.com/onurcevik/notification-service/internal/service"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -382,6 +382,136 @@ func TestNotificationHandler_CreateBatch_EmptyArray(t *testing.T) {
 	var errResp ErrorResponse
 	require.NoError(t, json.NewDecoder(rr.Body).Decode(&errResp))
 	assert.Contains(t, errResp.Error, "empty")
+}
+
+// TestNotificationHandler_List_QueryFilters verifies that query parameters (status, channel,
+// batch_id, limit) are correctly parsed and forwarded to the service as a domain.Filter.
+func TestNotificationHandler_List_QueryFilters(t *testing.T) {
+	tests := []struct {
+		name        string
+		query       string
+		wantStatus  domain.Status
+		wantChannel domain.Channel
+		wantLimit   int
+		wantBatchID string
+	}{
+		{
+			name:        "filters status and channel",
+			query:       "?status=delivered&channel=email&limit=5",
+			wantStatus:  domain.StatusDelivered,
+			wantChannel: domain.ChannelEmail,
+			wantLimit:   5,
+		},
+		{
+			name:        "filters batch_id",
+			query:       "?batch_id=batch-abc",
+			wantBatchID: "batch-abc",
+			wantLimit:   20, // default
+		},
+		{
+			name:      "limit clamped to 100 when over",
+			query:     "?limit=9999",
+			wantLimit: 20, // clamped to default
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var captured domain.Filter
+			svc := &capturingService{
+				onList: func(f domain.Filter) ([]domain.Notification, string, error) {
+					captured = f
+					return nil, "", nil
+				},
+			}
+			h := NewNotificationHandler(svc)
+			r := httptest.NewRequest(http.MethodGet, "/notifications"+tt.query, nil)
+			rr := httptest.NewRecorder()
+			h.List(rr, r)
+
+			require.Equal(t, http.StatusOK, rr.Code)
+
+			if tt.wantStatus != "" {
+				require.NotNil(t, captured.Status, "expected Status filter to be set")
+				assert.Equal(t, tt.wantStatus, *captured.Status)
+			} else {
+				assert.Nil(t, captured.Status)
+			}
+			if tt.wantChannel != "" {
+				require.NotNil(t, captured.Channel, "expected Channel filter to be set")
+				assert.Equal(t, tt.wantChannel, *captured.Channel)
+			} else {
+				assert.Nil(t, captured.Channel)
+			}
+			if tt.wantBatchID != "" {
+				require.NotNil(t, captured.BatchID, "expected BatchID filter to be set")
+				assert.Equal(t, tt.wantBatchID, *captured.BatchID)
+			}
+			assert.Equal(t, tt.wantLimit, captured.Limit)
+		})
+	}
+}
+
+// capturingService is a test double that captures the filter passed to List.
+type capturingService struct {
+	onList func(f domain.Filter) ([]domain.Notification, string, error)
+}
+
+func (s *capturingService) Create(_ context.Context, _ *domain.Notification) (*domain.Notification, bool, error) {
+	return nil, false, errors.New("not implemented")
+}
+func (s *capturingService) BatchCreate(_ context.Context, _ []*domain.Notification) ([]*domain.Notification, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *capturingService) Get(_ context.Context, _ string) (*domain.Notification, error) {
+	return nil, errors.New("not implemented")
+}
+func (s *capturingService) List(_ context.Context, f domain.Filter) ([]domain.Notification, string, error) {
+	if s.onList != nil {
+		return s.onList(f)
+	}
+	return nil, "", nil
+}
+func (s *capturingService) Cancel(_ context.Context, _ string) error {
+	return errors.New("not implemented")
+}
+
+// TestNotificationHandler_Create_Idempotent_Returns200 verifies that a second request
+// carrying the same idempotency key gets HTTP 200 (not 201) and the existing notification.
+func TestNotificationHandler_Create_Idempotent_Returns200(t *testing.T) {
+	existing := &domain.Notification{
+		ID:        "existing-id",
+		Channel:   domain.ChannelSMS,
+		Recipient: "+15551234567",
+		Content:   "Hello",
+		Status:    domain.StatusPending,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	svc := &stubNotificationService{
+		createResp: existing,
+		createNew:  false, // existing resource, not newly created
+		createErr:  nil,
+	}
+	h := NewNotificationHandler(svc)
+
+	body, err := json.Marshal(CreateNotificationRequest{
+		Recipient:      "+15551234567",
+		Channel:        "sms",
+		Content:        "Hello",
+		IdempotencyKey: "key-abc",
+	})
+	require.NoError(t, err)
+
+	r := httptest.NewRequest(http.MethodPost, "/notifications", bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	h.Create(rr, r)
+
+	assert.Equal(t, http.StatusOK, rr.Code, "duplicate idempotency key must return 200, not 201")
+	var resp NotificationResponse
+	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
+	assert.Equal(t, "existing-id", resp.ID)
 }
 
 func TestNotificationHandler_CreateBatch_ServiceError(t *testing.T) {
