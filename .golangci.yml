@@ -1,5 +1,7 @@
-# Explicit config so local and CI (golangci-lint v2.4.0) behave the same
-# regardless of which binary version is installed locally.
+# Explicit config so local and CI (golangci-lint v2.4.0) behave the same.
+# See https://golangci-lint.run/docs/product/migration-guide for v2 format.
+version: "2"
+
 run:
   timeout: 5m
 
